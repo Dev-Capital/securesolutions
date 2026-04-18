@@ -1,3 +1,76 @@
+##################################################
+# OS / SYSTEM FILES
+##################################################
+.DS_Store
+Thumbs.db
+desktop.ini
+
+##################################################
+# EDITOR / IDE
+##################################################
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+##################################################
+# NODE (web-dashboard)
+##################################################
+web-dashboard/node_modules/
+web-dashboard/.env
+web-dashboard/.env.*
+web-dashboard/npm-debug.log*
+web-dashboard/yarn-debug.log*
+web-dashboard/yarn-error.log*
+web-dashboard/pnpm-lock.yaml
+
+# Build outputs (if you add frontend build later)
+web-dashboard/dist/
+web-dashboard/build/
+
+##################################################
+# LOGS
+##################################################
+*.log
+
+##################################################
+# FIRMWARE (ESP32 / Arduino)
+##################################################
+# Local secrets (CRITICAL)
+firmware-node/secrets.h
+firmware-controller/secrets.h
+
+# Arduino temporary files
+*.ino.cpp
+*.elf
+*.bin
+*.map
+
+# ESP build artifacts (if using PlatformIO later)
+.pio/
+.pioenvs/
+.piolibdeps/
+
+##################################################
+# PYTHON (if you add scripts later)
+##################################################
+__pycache__/
+*.pyc
+
+##################################################
+# ARCH / LINUX / WSL
+##################################################
+.cache/
+.local/
+
+##################################################
+# MISC
+##################################################
+*.tmp
+*.bak
+*.old
+
 # Logs
 logs
 *.log
