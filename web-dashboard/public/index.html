@@ -1,0 +1,2098 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kumba & Transnet Corridor Security Monitoring System</title>
+  <style>
+    :root {
+      --bg: #f3f6f9;
+      --bg-soft: #eef3f7;
+      --panel: #ffffff;
+      --panel-soft: #f8fbfd;
+      --border: #d8e1e8;
+      --border-strong: #bfccd8;
+
+      --text: #1f2d3a;
+      --muted: #6c7a86;
+      --heading: #17324d;
+
+      --primary: #1f4e79;
+      --primary-2: #2f6f8f;
+      --accent: #58a9b7;
+
+      --ok: #2e7d32;
+      --ok-soft: #eaf5ec;
+
+      --warning: #b9851a;
+      --warning-soft: #fff5de;
+
+      --danger: #c0392b;
+      --danger-soft: #fbe9e7;
+
+      --suppressed: #98a6b3;
+      --suppressed-soft: #eef2f5;
+
+      --info: #2f6f8f;
+      --info-soft: #edf5fa;
+
+      --shadow-sm: 0 2px 8px rgba(23, 50, 77, 0.06);
+      --shadow-md: 0 10px 26px rgba(23, 50, 77, 0.08);
+
+      --radius: 14px;
+      --radius-sm: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Inter", "Segoe UI", Arial, sans-serif;
+      background:
+        linear-gradient(135deg, rgba(31, 78, 121, 0.04) 0%, rgba(31, 78, 121, 0) 36%),
+        linear-gradient(315deg, rgba(88, 169, 183, 0.03) 0%, rgba(88, 169, 183, 0) 42%),
+        var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 1.2rem;
+    }
+
+    .dashboard {
+      max-width: 1480px;
+      margin: 0 auto;
+    }
+
+    .topbar {
+      position: relative;
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.25rem;
+      padding: 1.15rem 1.25rem;
+      background: linear-gradient(180deg, #ffffff, #f9fbfd);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-md);
+      overflow: hidden;
+    }
+
+    .topbar::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 6px;
+      background: linear-gradient(180deg, var(--primary), var(--accent));
+    }
+
+    .topbar::after {
+      content: "";
+      position: absolute;
+      right: -80px;
+      top: -80px;
+      width: 280px;
+      height: 280px;
+      background: linear-gradient(135deg, rgba(31, 78, 121, 0.07), rgba(88, 169, 183, 0.015));
+      transform: rotate(28deg);
+      pointer-events: none;
+    }
+
+    .brand-wrap {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+      flex: 1 1 700px;
+      z-index: 1;
+    }
+
+    .brand-mark {
+      width: 62px;
+      height: 62px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--primary), var(--primary-2));
+      border: 1px solid rgba(255,255,255,0.3);
+      box-shadow: var(--shadow-sm);
+      flex-shrink: 0;
+    }
+
+    .brand-mark svg {
+      width: 34px;
+      height: 34px;
+      fill: #fff;
+    }
+
+    .brand-block h1 {
+      margin: 0 0 0.18rem;
+      color: var(--heading);
+      font-size: 1.18rem;
+      line-height: 1.25;
+      text-transform: uppercase;
+      letter-spacing: 0.045em;
+      font-weight: 800;
+    }
+
+    .brand-block .subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.4;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-weight: 700;
+    }
+
+    .brand-meta {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-top: 0.6rem;
+    }
+
+    .brand-chip {
+      font-size: 0.7rem;
+      padding: 0.34rem 0.6rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #f9fbfd;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 800;
+    }
+
+    .topbar-status {
+      display: flex;
+      gap: 0.85rem;
+      flex-wrap: wrap;
+      align-items: stretch;
+      z-index: 1;
+    }
+
+    .status-panel {
+      min-width: 220px;
+      padding: 0.9rem 1rem;
+      background: #fbfdff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .status-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #b0bec5;
+      flex-shrink: 0;
+    }
+
+    .status-dot.connected { background: var(--ok); }
+    .status-dot.disconnected { background: var(--danger); }
+
+    .status-text {
+      display: flex;
+      flex-direction: column;
+      gap: 0.12rem;
+    }
+
+    .status-label {
+      font-size: 0.71rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 800;
+    }
+
+    .status-value {
+      font-size: 0.96rem;
+      color: var(--text);
+      font-weight: 800;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: 1.55fr 1fr;
+      gap: 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1.45fr 1fr;
+      gap: 1.25rem;
+    }
+
+    .left-column, .right-column {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .card {
+      position: relative;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-md);
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto auto 0;
+      width: 100%;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+    }
+
+    .card-header {
+      padding: 1rem 1.15rem 0.8rem;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, #ffffff, #fbfdff);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .card-header h2 {
+      margin: 0;
+      font-size: 0.94rem;
+      color: var(--heading);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 800;
+    }
+
+    .card-subtle {
+      font-size: 0.74rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 800;
+    }
+
+    .card-body {
+      padding: 1.15rem;
+    }
+
+    .overview-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 0.85rem;
+    }
+
+    .overview-item {
+      padding: 0.95rem;
+      background: var(--panel-soft);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+
+    .overview-label {
+      font-size: 0.69rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 800;
+      margin-bottom: 0.35rem;
+    }
+
+    .overview-value {
+      font-size: 0.98rem;
+      color: var(--heading);
+      font-weight: 800;
+      line-height: 1.35;
+    }
+
+    .warnings-stack {
+      display: grid;
+      gap: 0.7rem;
+    }
+
+    .warning-item {
+      padding: 0.85rem 0.95rem;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--panel-soft);
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .warning-item.warning {
+      background: var(--warning-soft);
+      border-color: #ead8a7;
+    }
+
+    .warning-item.danger {
+      background: var(--danger-soft);
+      border-color: #efc7c2;
+    }
+
+    .warning-item.info {
+      background: var(--info-soft);
+      border-color: #cfe2ee;
+    }
+
+    .warning-title {
+      font-size: 0.72rem;
+      color: var(--heading);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 800;
+    }
+
+    .warning-body {
+      font-size: 0.87rem;
+      color: var(--text);
+      line-height: 1.45;
+    }
+
+    .warning-empty {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    #alert {
+      display: none;
+      padding: 1.05rem 1.15rem;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      line-height: 1.55;
+      font-size: 0.98rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    #alert.still {
+      display: block;
+      background: #f7fafc;
+      border-left: 5px solid var(--primary-2);
+    }
+
+    #alert.movement {
+      display: block;
+      background: var(--warning-soft);
+      border-color: #ead8a7;
+      border-left: 5px solid var(--warning);
+    }
+
+    #alert.electrical {
+      display: block;
+      background: var(--info-soft);
+      border-color: #cfe2ee;
+      border-left: 5px solid var(--info);
+    }
+
+    #alert.combined {
+      display: block;
+      background: var(--danger-soft);
+      border-color: #efc7c2;
+      border-left: 5px solid var(--danger);
+    }
+
+    #alert.suppressed {
+      display: block;
+      background: var(--suppressed-soft);
+      border-color: #d6dde4;
+      border-left: 5px solid var(--suppressed);
+    }
+
+    .alert-title {
+      display: block;
+      margin-bottom: 0.45rem;
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 800;
+    }
+
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 0.85rem;
+      margin-top: 1rem;
+    }
+
+    .kpi {
+      padding: 0.95rem;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--panel-soft);
+    }
+
+    .kpi-label {
+      font-size: 0.69rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 800;
+      margin-bottom: 0.35rem;
+    }
+
+    .kpi-value {
+      color: var(--heading);
+      font-size: 1.05rem;
+      font-weight: 800;
+    }
+
+    .sensor-map {
+      position: relative;
+      min-height: 460px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: linear-gradient(180deg, #fcfefe, #f6f9fb);
+      overflow: hidden;
+    }
+
+    .sensor-map::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(23, 50, 77, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(23, 50, 77, 0.04) 1px, transparent 1px);
+      background-size: 42px 42px;
+      pointer-events: none;
+    }
+
+    .sensor-map::after {
+      content: "";
+      position: absolute;
+      left: -10%;
+      bottom: -18%;
+      width: 60%;
+      height: 48%;
+      background: linear-gradient(135deg, rgba(31, 78, 121, 0.05), rgba(88, 169, 183, 0.01));
+      transform: rotate(-8deg);
+      pointer-events: none;
+    }
+
+    .map-title-strip {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      z-index: 2;
+      padding: 0.46rem 0.75rem;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.95);
+      border: 1px solid var(--border);
+      color: var(--primary);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 800;
+    }
+
+    .map-caption {
+      position: absolute;
+      top: 52px;
+      left: 16px;
+      z-index: 2;
+      color: var(--muted);
+      font-size: 0.78rem;
+      max-width: 380px;
+      line-height: 1.45;
+    }
+
+    .corridor-line {
+      position: absolute;
+      top: 54%;
+      left: 8%;
+      width: 84%;
+      height: 4px;
+      transform: translateY(-50%);
+      background: linear-gradient(90deg, #a6bccb, var(--primary));
+      border-radius: 999px;
+    }
+
+    .corridor-line::before,
+    .corridor-line::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      transform: translateY(-50%);
+      background: var(--primary);
+    }
+
+    .corridor-line::before { left: -4px; }
+    .corridor-line::after { right: -4px; }
+
+    .corridor-label {
+      position: absolute;
+      top: calc(54% + 18px);
+      transform: translateX(-50%);
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .corridor-label.start { left: 8%; transform: translateX(-10%); }
+    .corridor-label.end { left: 92%; transform: translateX(-90%); }
+
+    .location-tag {
+      position: absolute;
+      z-index: 2;
+      font-size: 0.7rem;
+      color: var(--primary);
+      font-weight: 800;
+      background: rgba(255,255,255,0.95);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 0.28rem 0.5rem;
+    }
+
+    .location-sishen { left: 8%; top: 64%; }
+    .location-saldanha { left: 82%; top: 64%; }
+
+    .sensor-node {
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--ok);
+      border: 2px solid #fff;
+      box-shadow: 0 0 0 2px rgba(23, 50, 77, 0.12);
+      transform: translate(-50%, -50%);
+      z-index: 3;
+    }
+
+    .sensor-node.warning {
+      background: var(--warning);
+      box-shadow: 0 0 0 2px rgba(185, 133, 26, 0.18);
+    }
+
+    .sensor-node.alert {
+      background: var(--danger);
+      box-shadow: 0 0 0 2px rgba(192, 57, 43, 0.22);
+      animation: pulse 1.25s ease-in-out infinite;
+    }
+
+    .sensor-node.suppressed {
+      background: var(--suppressed);
+      box-shadow: 0 0 0 2px rgba(152, 166, 179, 0.18);
+    }
+
+    .sensor-node.offline {
+      background: #7f8c8d;
+      box-shadow: 0 0 0 2px rgba(127, 140, 141, 0.16);
+    }
+
+    @keyframes pulse {
+      0% { transform: translate(-50%, -50%) scale(1); }
+      50% { transform: translate(-50%, -50%) scale(1.08); }
+      100% { transform: translate(-50%, -50%) scale(1); }
+    }
+
+    .sensor-tooltip {
+      position: absolute;
+      top: -66px;
+      left: 50%;
+      transform: translateX(-50%);
+      min-width: 150px;
+      padding: 0.45rem 0.55rem;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.97);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      color: var(--text);
+      text-align: center;
+      font-size: 0.72rem;
+      line-height: 1.35;
+      white-space: nowrap;
+    }
+
+    .sensor-tooltip strong {
+      display: block;
+      color: var(--heading);
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.08rem;
+    }
+
+    .map-legend {
+      position: absolute;
+      right: 16px;
+      bottom: 16px;
+      z-index: 2;
+      min-width: 215px;
+      padding: 0.75rem 0.85rem;
+      background: rgba(255,255,255,0.96);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .legend-title {
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 800;
+      margin-bottom: 0.55rem;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      margin-bottom: 0.38rem;
+      font-size: 0.82rem;
+    }
+
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .legend-dot.ok { background: var(--ok); }
+    .legend-dot.warning { background: var(--warning); }
+    .legend-dot.alert { background: var(--danger); }
+    .legend-dot.suppressed { background: var(--suppressed); }
+    .legend-dot.offline { background: #7f8c8d; }
+
+    .zone-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.85rem;
+    }
+
+    .zone-card {
+      padding: 0.95rem;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--panel-soft);
+    }
+
+    .zone-card-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.75rem;
+      align-items: center;
+      margin-bottom: 0.65rem;
+      flex-wrap: wrap;
+    }
+
+    .zone-title-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.12rem;
+    }
+
+    .zone-title {
+      color: var(--heading);
+      font-size: 0.84rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 800;
+    }
+
+    .zone-subtitle {
+      color: var(--muted);
+      font-size: 0.76rem;
+      font-weight: 700;
+    }
+
+    .zone-badge {
+      font-size: 0.67rem;
+      padding: 0.26rem 0.5rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 800;
+    }
+
+    .zone-badge.ok {
+      color: var(--ok);
+      background: var(--ok-soft);
+      border-color: #cbe3d0;
+    }
+
+    .zone-badge.warning {
+      color: var(--warning);
+      background: var(--warning-soft);
+      border-color: #ebd9a6;
+    }
+
+    .zone-badge.alert {
+      color: var(--danger);
+      background: var(--danger-soft);
+      border-color: #efc7c2;
+    }
+
+    .zone-badge.suppressed {
+      color: #6e7c89;
+      background: var(--suppressed-soft);
+      border-color: #d6dde4;
+    }
+
+    .zone-badge.offline {
+      color: #5d6b6c;
+      background: #edf0f1;
+      border-color: #d5ddde;
+    }
+
+    .zone-sensor-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.65rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .sensor-state-card {
+      padding: 0.7rem 0.75rem;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #fff;
+    }
+
+    .sensor-state-label {
+      font-size: 0.66rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 800;
+      margin-bottom: 0.28rem;
+    }
+
+    .sensor-state-value {
+      font-size: 0.83rem;
+      color: var(--heading);
+      font-weight: 800;
+    }
+
+    .sensor-state-value.ok { color: var(--ok); }
+    .sensor-state-value.warning { color: var(--warning); }
+    .sensor-state-value.alert { color: var(--danger); }
+    .sensor-state-value.offline { color: #5d6b6c; }
+
+    .zone-meta {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.65rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .zone-meta-item {
+      padding: 0.7rem 0.75rem;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+
+    .zone-meta-label {
+      font-size: 0.66rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 800;
+      margin-bottom: 0.25rem;
+    }
+
+    .zone-meta-value {
+      font-size: 0.84rem;
+      color: var(--heading);
+      font-weight: 800;
+    }
+
+    .zone-controls {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.75rem;
+      align-items: center;
+      flex-wrap: wrap;
+      padding-top: 0.25rem;
+    }
+
+    .toggle-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.65rem;
+      font-size: 0.78rem;
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    .toggle-wrap input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+
+    .zone-action-btn,
+    .action-btn,
+    .zone-select {
+      font: inherit;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      padding: 0.68rem 0.88rem;
+    }
+
+    .zone-action-btn,
+    .action-btn {
+      background: #fff;
+      color: var(--primary);
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .zone-action-btn:hover,
+    .action-btn:hover {
+      background: #f6fafc;
+    }
+
+    .control-stack {
+      display: grid;
+      gap: 0.85rem;
+    }
+
+    .control-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    .zone-select {
+      background: #fff;
+      color: var(--text);
+      min-width: 180px;
+    }
+
+    #log {
+      max-height: 560px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+      padding-right: 0.1rem;
+    }
+
+    .entry {
+      padding: 0.85rem 0.9rem;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--primary);
+      background: #fbfdff;
+      color: var(--text);
+      font-size: 0.88rem;
+      line-height: 1.45;
+    }
+
+    .entry.alert-entry {
+      border-left-color: var(--danger);
+      background: var(--danger-soft);
+    }
+
+    .entry.warning-entry {
+      border-left-color: var(--warning);
+      background: var(--warning-soft);
+    }
+
+    .entry.info-entry {
+      border-left-color: var(--info);
+      background: var(--info-soft);
+    }
+
+    .entry.suppressed-entry {
+      border-left-color: var(--suppressed);
+      background: var(--suppressed-soft);
+    }
+
+    .entry-meta {
+      display: block;
+      font-size: 0.73rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 800;
+      margin-bottom: 0.25rem;
+    }
+
+    .empty-log {
+      color: var(--muted);
+      font-size: 0.9rem;
+      padding: 0.35rem 0;
+    }
+
+    @media (max-width: 1260px) {
+      .summary-grid,
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .overview-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 960px) {
+      .kpi-row,
+      .zone-meta,
+      .zone-sensor-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .overview-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 0.85rem;
+      }
+
+      .topbar {
+        padding: 1rem;
+      }
+
+      .brand-block h1 {
+        font-size: 1.02rem;
+      }
+
+      .kpi-row,
+      .zone-meta,
+      .zone-sensor-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .status-panel {
+        min-width: 100%;
+      }
+
+      .sensor-tooltip {
+        min-width: 110px;
+        font-size: 0.68rem;
+      }
+
+      .map-caption {
+        max-width: 250px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard">
+    <div class="topbar">
+      <div class="brand-wrap">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M12 2 4 5v6c0 5.25 3.4 9.95 8 11 4.6-1.05 8-5.75 8-11V5l-8-3Zm0 3.1 5 1.88V11c0 3.86-2.32 7.4-5 8.7-2.68-1.3-5-4.84-5-8.7V6.98l5-1.88Zm-1.3 9.9 5.65-5.66-1.4-1.41-4.25 4.25-1.95-1.95-1.41 1.41L10.7 15Z"/></svg>
+        </div>
+        <div class="brand-block">
+          <h1>Kumba Iron Ore &amp; Transnet Corridor Security Monitoring System</h1>
+          <p class="subtitle">Joint Security Tender • SecureSolutions Oversight Platform • Sishen–Saldanha Ore Corridor</p>
+          <div class="brand-meta">
+            <span class="brand-chip">Integrated Monitoring</span>
+            <span class="brand-chip">Operational Visibility</span>
+            <span class="brand-chip">PSIRA-aligned</span>
+            <span class="brand-chip">POPIA-conscious</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="topbar-status">
+        <div class="status-panel">
+          <div id="statusDot" class="status-dot"></div>
+          <div class="status-text">
+            <div class="status-label">System Server</div>
+            <div id="status" class="status-value">Connecting...</div>
+          </div>
+        </div>
+
+        <div class="status-panel">
+          <div class="status-text">
+            <div class="status-label">Connected Nodes</div>
+            <div id="nodeCount" class="status-value">0 / 3 Connected</div>
+          </div>
+        </div>
+
+        <div class="status-panel">
+          <div class="status-text">
+            <div class="status-label">Suppressed Zones</div>
+            <div id="suppressedZonesHeader" class="status-value">0</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="summary-grid">
+      <div class="card">
+        <div class="card-header">
+          <h2>System Overview</h2>
+          <div class="card-subtle">Joint corridor monitoring context</div>
+        </div>
+        <div class="card-body">
+          <div class="overview-grid">
+            <div class="overview-item">
+              <div class="overview-label">Client Structure</div>
+              <div class="overview-value">Kumba Iron Ore &amp; Transnet</div>
+            </div>
+            <div class="overview-item">
+              <div class="overview-label">Corridor</div>
+              <div class="overview-value">Sishen → Saldanha</div>
+            </div>
+            <div class="overview-item">
+              <div class="overview-label">Length</div>
+              <div class="overview-value">861 km</div>
+            </div>
+            <div class="overview-item">
+              <div class="overview-label">Monitoring Model</div>
+              <div class="overview-value">Distributed Field Nodes</div>
+            </div>
+            <div class="overview-item">
+              <div class="overview-label">Gateway Role</div>
+              <div class="overview-value">Radio-to-Web Relay</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2>System Warnings</h2>
+          <div class="card-subtle">Derived corridor-level conditions</div>
+        </div>
+        <div class="card-body">
+          <div id="systemWarnings" class="warnings-stack">
+            <div class="warning-empty">No active system warnings.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="main-grid">
+      <div class="left-column">
+        <div class="card">
+          <div class="card-header">
+            <h2>Incident Status</h2>
+            <div class="card-subtle">Real-time operational monitoring</div>
+          </div>
+          <div class="card-body">
+            <div id="alert" class="still">
+              <span class="alert-title">System State</span>
+              Awaiting sensor data...
+            </div>
+
+            <div class="kpi-row">
+              <div class="kpi">
+                <div class="kpi-label">Incidents Today</div>
+                <div id="totalAlerts" class="kpi-value">0</div>
+              </div>
+              <div class="kpi">
+                <div class="kpi-label">Active Incidents</div>
+                <div id="activeIncidentsCount" class="kpi-value">0</div>
+              </div>
+              <div class="kpi">
+                <div class="kpi-label">Elevated Zones</div>
+                <div id="elevatedZonesCount" class="kpi-value">0</div>
+              </div>
+              <div class="kpi">
+                <div class="kpi-label">Electrical Warnings</div>
+                <div id="electricalWarningsCount" class="kpi-value">0</div>
+              </div>
+              <div class="kpi">
+                <div class="kpi-label">Offline Nodes</div>
+                <div id="offlineNodesCount" class="kpi-value">0</div>
+              </div>
+              <div class="kpi">
+                <div class="kpi-label">Last Incident Zone</div>
+                <div id="lastIncidentZone" class="kpi-value">--</div>
+              </div>
+            </div>
+
+            <div class="kpi-row">
+              <div class="kpi">
+                <div class="kpi-label">Current Disturbance Level</div>
+                <div id="lastDelta" class="kpi-value">--</div>
+              </div>
+              <div class="kpi">
+                <div class="kpi-label">Last Corridor Update</div>
+                <div id="lastUpdate" class="kpi-value">--:--:--</div>
+              </div>
+              <div class="kpi">
+                <div class="kpi-label">Active Zone</div>
+                <div id="activeSensor" class="kpi-value">--</div>
+              </div>
+              <div class="kpi">
+                <div class="kpi-label">Suppressed Zones</div>
+                <div id="suppressedZonesCount" class="kpi-value">0</div>
+              </div>
+              <div class="kpi">
+                <div class="kpi-label">Last Event Type</div>
+                <div id="lastEventType" class="kpi-value">--</div>
+              </div>
+              <div class="kpi">
+                <div class="kpi-label">Last Severity</div>
+                <div id="lastSeverity" class="kpi-value">--</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h2>Corridor Monitoring View</h2>
+            <div class="card-subtle">Infrastructure segment visibility</div>
+          </div>
+          <div class="card-body">
+            <div class="sensor-map" id="sensorMap">
+              <div class="map-title-strip">Sishen–Saldanha Iron Ore Corridor</div>
+              <div class="map-caption">
+                Monitored corridor segment view for distributed field nodes linked to the gateway relay and dashboard oversight layer.
+              </div>
+
+              <div class="corridor-line"></div>
+              <div class="corridor-label start">Sishen</div>
+              <div class="corridor-label end">Saldanha</div>
+
+              <div class="location-tag location-sishen">Sishen Mine</div>
+              <div class="location-tag location-saldanha">Saldanha Port</div>
+
+              <div class="sensor-node" id="node-S1" style="left: 12%; top: 54%;">
+                <div class="sensor-tooltip" id="tooltip-S1"><strong>S1 — Zone Alpha</strong>Field Node</div>
+              </div>
+
+              <div class="sensor-node" id="node-S2" style="left: 28%; top: 54%;">
+                <div class="sensor-tooltip" id="tooltip-S2"><strong>S2 — Zone Bravo</strong>Field Node</div>
+              </div>
+
+              <div class="sensor-node" id="node-S3" style="left: 46%; top: 54%;">
+                <div class="sensor-tooltip" id="tooltip-S3"><strong>S3 — Zone Central</strong>Field Node</div>
+              </div>
+
+              <div class="sensor-node" id="node-S4" style="left: 64%; top: 54%;">
+                <div class="sensor-tooltip" id="tooltip-S4"><strong>S4 — Zone Delta</strong>Field Node</div>
+              </div>
+
+              <div class="sensor-node" id="node-S5" style="left: 82%; top: 54%;">
+                <div class="sensor-tooltip" id="tooltip-S5"><strong>S5 — Zone Echo</strong>Field Node</div>
+              </div>
+
+              <div class="map-legend">
+                <div class="legend-title">Zone Display Status</div>
+                <div class="legend-item"><span class="legend-dot ok"></span>Normal</div>
+                <div class="legend-item"><span class="legend-dot warning"></span>Elevated</div>
+                <div class="legend-item"><span class="legend-dot alert"></span>Active Incident</div>
+                <div class="legend-item"><span class="legend-dot suppressed"></span>Suppressed on Dashboard</div>
+                <div class="legend-item"><span class="legend-dot offline"></span>Offline / Telemetry Gap</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="right-column">
+        <div class="card">
+          <div class="card-header">
+            <h2>Zone Status & Controls</h2>
+            <div class="card-subtle">Operational nodes with display controls</div>
+          </div>
+          <div class="card-body">
+            <div class="zone-grid">
+              <div class="zone-card" id="card-S1">
+                <div class="zone-card-head">
+                  <div class="zone-title-group">
+                    <div class="zone-title">Node S1</div>
+                    <div class="zone-subtitle">Zone Alpha</div>
+                  </div>
+                  <div class="zone-badge ok" id="badge-S1">Normal</div>
+                </div>
+                <div class="zone-sensor-grid">
+                  <div class="sensor-state-card">
+                    <div class="sensor-state-label">Movement</div>
+                    <div class="sensor-state-value ok" id="movementState-S1">Normal</div>
+                  </div>
+                  <div class="sensor-state-card">
+                    <div class="sensor-state-label">Electrical / Hall</div>
+                    <div class="sensor-state-value ok" id="hallState-S1">Normal</div>
+                  </div>
+                </div>
+                <div class="zone-meta">
+                  <div class="zone-meta-item">
+                    <div class="zone-meta-label">Last Delta</div>
+                    <div class="zone-meta-value" id="delta-S1">0.00</div>
+                  </div>
+                  <div class="zone-meta-item">
+                    <div class="zone-meta-label">Last Hall</div>
+                    <div class="zone-meta-value" id="hallValue-S1">--</div>
+                  </div>
+                  <div class="zone-meta-item">
+                    <div class="zone-meta-label">Last Seen</div>
+                    <div class="zone-meta-value" id="lastSeen-S1">--:--:--</div>
+                  </div>
+                  <div class="zone-meta-item">
+                    <div class="zone-meta-label">Display</div>
+                    <div class="zone-meta-value" id="displayState-S1">Enabled</div>
+                  </div>
+                </div>
+                <div class="zone-controls">
+                  <label class="toggle-wrap">
+                    <input type="checkbox" id="toggle-S1" checked />
+                    Show alerts on dashboard
+                  </label>
+                  <button class="zone-action-btn" data-clear-zone="S1">Clear S1 log</button>
+                </div>
+              </div>
+
+              <div class="zone-card" id="card-S2">
+                <div class="zone-card-head">
+                  <div class="zone-title-group">
+                    <div class="zone-title">Node S2</div>
+                    <div class="zone-subtitle">Zone Bravo</div>
+                  </div>
+                  <div class="zone-badge ok" id="badge-S2">Normal</div>
+                </div>
+                <div class="zone-sensor-grid">
+                  <div class="sensor-state-card">
+                    <div class="sensor-state-label">Movement</div>
+                    <div class="sensor-state-value ok" id="movementState-S2">Normal</div>
+                  </div>
+                  <div class="sensor-state-card">
+                    <div class="sensor-state-label">Electrical / Hall</div>
+                    <div class="sensor-state-value ok" id="hallState-S2">Normal</div>
+                  </div>
+                </div>
+                <div class="zone-meta">
+                  <div class="zone-meta-item">
+                    <div class="zone-meta-label">Last Delta</div>
+                    <div class="zone-meta-value" id="delta-S2">0.00</div>
+                  </div>
+                  <div class="zone-meta-item">
+                    <div class="zone-meta-label">Last Hall</div>
+                    <div class="zone-meta-value" id="hallValue-S2">--</div>
+                  </div>
+                  <div class="zone-meta-item">
+                    <div class="zone-meta-label">Last Seen</div>
+                    <div class="zone-meta-value" id="lastSeen-S2">--:--:--</div>
+                  </div>
+                  <div class="zone-meta-item">
+                    <div class="zone-meta-label">Display</div>
+                    <div class="zone-meta-value" id="displayState-S2">Enabled</div>
+                  </div>
+                </div>
+                <div class="zone-controls">
+                  <label class="toggle-wrap">
+                    <input type="checkbox" id="toggle-S2" checked />
+                    Show alerts on dashboard
+                  </label>
+                  <button class="zone-action-btn" data-clear-zone="S2">Clear S2 log</button>
+                </div>
+              </div>
+
+              <div class="zone-card" id="card-S3">
+                <div class="zone-card-head">
+                  <div class="zone-title-group">
+                    <div class="zone-title">Node S3</div>
+                    <div class="zone-subtitle">Zone Central</div>
+                  </div>
+                  <div class="zone-badge ok" id="badge-S3">Normal</div>
+                </div>
+                <div class="zone-sensor-grid">
+                  <div class="sensor-state-card">
+                    <div class="sensor-state-label">Movement</div>
+                    <div class="sensor-state-value ok" id="movementState-S3">Normal</div>
+                  </div>
+                  <div class="sensor-state-card">
+                    <div class="sensor-state-label">Electrical / Hall</div>
+                    <div class="sensor-state-value ok" id="hallState-S3">Normal</div>
+                  </div>
+                </div>
+                <div class="zone-meta">
+                  <div class="zone-meta-item">
+                    <div class="zone-meta-label">Last Delta</div>
+                    <div class="zone-meta-value" id="delta-S3">0.00</div>
+                  </div>
+                  <div class="zone-meta-item">
+                    <div class="zone-meta-label">Last Hall</div>
+                    <div class="zone-meta-value" id="hallValue-S3">--</div>
+                  </div>
+                  <div class="zone-meta-item">
+                    <div class="zone-meta-label">Last Seen</div>
+                    <div class="zone-meta-value" id="lastSeen-S3">--:--:--</div>
+                  </div>
+                  <div class="zone-meta-item">
+                    <div class="zone-meta-label">Display</div>
+                    <div class="zone-meta-value" id="displayState-S3">Enabled</div>
+                  </div>
+                </div>
+                <div class="zone-controls">
+                  <label class="toggle-wrap">
+                    <input type="checkbox" id="toggle-S3" checked />
+                    Show alerts on dashboard
+                  </label>
+                  <button class="zone-action-btn" data-clear-zone="S3">Clear S3 log</button>
+                </div>
+              </div>
+
+              <div class="zone-card" id="card-S4">
+                <div class="zone-card-head">
+                  <div class="zone-title-group">
+                    <div class="zone-title">Node S4</div>
+                    <div class="zone-subtitle">Zone Delta</div>
+                  </div>
+                  <div class="zone-badge ok" id="badge-S4">Normal</div>
+                </div>
+                <div class="zone-sensor-grid">
+                  <div class="sensor-state-card">
+                    <div class="sensor-state-label">Movement</div>
+                    <div class="sensor-state-value ok" id="movementState-S4">Normal</div>
+                  </div>
+                  <div class="sensor-state-card">
+                    <div class="sensor-state-label">Electrical / Hall</div>
+                    <div class="sensor-state-value ok" id="hallState-S4">Normal</div>
+                  </div>
+                </div>
+                <div class="zone-meta">
+                  <div class="zone-meta-item">
+                    <div class="zone-meta-label">Last Delta</div>
+                    <div class="zone-meta-value" id="delta-S4">0.00</div>
+                  </div>
+                  <div class="zone-meta-item">
+                    <div class="zone-meta-label">Last Hall</div>
+                    <div class="zone-meta-value" id="hallValue-S4">--</div>
+                  </div>
+                  <div class="zone-meta-item">
+                    <div class="zone-meta-label">Last Seen</div>
+                    <div class="zone-meta-value" id="lastSeen-S4">--:--:--</div>
+                  </div>
+                  <div class="zone-meta-item">
+                    <div class="zone-meta-label">Display</div>
+                    <div class="zone-meta-value" id="displayState-S4">Enabled</div>
+                  </div>
+                </div>
+                <div class="zone-controls">
+                  <label class="toggle-wrap">
+                    <input type="checkbox" id="toggle-S4" checked />
+                    Show alerts on dashboard
+                  </label>
+                  <button class="zone-action-btn" data-clear-zone="S4">Clear S4 log</button>
+                </div>
+              </div>
+
+              <div class="zone-card" id="card-S5">
+                <div class="zone-card-head">
+                  <div class="zone-title-group">
+                    <div class="zone-title">Node S5</div>
+                    <div class="zone-subtitle">Zone Echo</div>
+                  </div>
+                  <div class="zone-badge ok" id="badge-S5">Normal</div>
+                </div>
+                <div class="zone-sensor-grid">
+                  <div class="sensor-state-card">
+                    <div class="sensor-state-label">Movement</div>
+                    <div class="sensor-state-value ok" id="movementState-S5">Normal</div>
+                  </div>
+                  <div class="sensor-state-card">
+                    <div class="sensor-state-label">Electrical / Hall</div>
+                    <div class="sensor-state-value ok" id="hallState-S5">Normal</div>
+                  </div>
+                </div>
+                <div class="zone-meta">
+                  <div class="zone-meta-item">
+                    <div class="zone-meta-label">Last Delta</div>
+                    <div class="zone-meta-value" id="delta-S5">0.00</div>
+                  </div>
+                  <div class="zone-meta-item">
+                    <div class="zone-meta-label">Last Hall</div>
+                    <div class="zone-meta-value" id="hallValue-S5">--</div>
+                  </div>
+                  <div class="zone-meta-item">
+                    <div class="zone-meta-label">Last Seen</div>
+                    <div class="zone-meta-value" id="lastSeen-S5">--:--:--</div>
+                  </div>
+                  <div class="zone-meta-item">
+                    <div class="zone-meta-label">Display</div>
+                    <div class="zone-meta-value" id="displayState-S5">Enabled</div>
+                  </div>
+                </div>
+                <div class="zone-controls">
+                  <label class="toggle-wrap">
+                    <input type="checkbox" id="toggle-S5" checked />
+                    Show alerts on dashboard
+                  </label>
+                  <button class="zone-action-btn" data-clear-zone="S5">Clear S5 log</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h2>Incident Audit Trail</h2>
+            <div class="card-subtle">Displayed dashboard history</div>
+          </div>
+          <div class="card-body">
+            <div class="control-stack">
+              <div class="control-row">
+                <button id="clearAllLogsBtn" class="action-btn">Clear All Log Entries</button>
+              </div>
+              <div class="control-row">
+                <select id="clearZoneSelect" class="zone-select">
+                  <option value="">Select zone</option>
+                  <option value="S1">Zone S1</option>
+                  <option value="S2">Zone S2</option>
+                  <option value="S3">Zone S3</option>
+                  <option value="S4">Zone S4</option>
+                  <option value="S5">Zone S5</option>
+                  <option value="SYSTEM">System</option>
+                </select>
+                <button id="clearZoneLogsBtn" class="action-btn">Clear Selected Zone</button>
+              </div>
+            </div>
+
+            <div id="log" style="margin-top: 1rem;">
+              <div class="empty-log">No alerts received yet.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const wsUrl = location.protocol === "https:" ? `wss://${location.host}` : `ws://${location.host}`;
+    const ws = new WebSocket(wsUrl);
+
+    const status = document.getElementById("status");
+    const statusDot = document.getElementById("statusDot");
+    const nodeCountEl = document.getElementById("nodeCount");
+
+    const suppressedZonesHeader = document.getElementById("suppressedZonesHeader");
+    const suppressedZonesCount = document.getElementById("suppressedZonesCount");
+    const activeIncidentsCount = document.getElementById("activeIncidentsCount");
+    const elevatedZonesCount = document.getElementById("elevatedZonesCount");
+    const electricalWarningsCount = document.getElementById("electricalWarningsCount");
+    const offlineNodesCount = document.getElementById("offlineNodesCount");
+    const lastIncidentZone = document.getElementById("lastIncidentZone");
+
+    const alertBox = document.getElementById("alert");
+    const log = document.getElementById("log");
+    const totalAlertsEl = document.getElementById("totalAlerts");
+    const lastDeltaEl = document.getElementById("lastDelta");
+    const lastUpdateEl = document.getElementById("lastUpdate");
+    const activeSensorEl = document.getElementById("activeSensor");
+    const lastEventTypeEl = document.getElementById("lastEventType");
+    const lastSeverityEl = document.getElementById("lastSeverity");
+    const systemWarningsEl = document.getElementById("systemWarnings");
+
+    let totalAlerts = 0;
+    let audioReady = false;
+    let audioCtx = null;
+    let sensorIndex = 0;
+
+    const sensorIds = ["S1", "S2", "S3", "S4", "S5"];
+
+    const zoneNames = {
+      S1: "Zone Alpha",
+      S2: "Zone Bravo",
+      S3: "Zone Central",
+      S4: "Zone Delta",
+      S5: "Zone Echo"
+    };
+
+    const HALL_REFERENCE_NODES = ["S1", "S3"];
+    const OFFLINE_TIMEOUT_MS = 35000;
+    const MULTI_ZONE_WINDOW_MS = 15000;
+
+    const zoneAlertEnabled = {
+      S1: true,
+      S2: true,
+      S3: true,
+      S4: true,
+      S5: true
+    };
+
+    const sensorState = {
+      S1: makeInitialSensorState(),
+      S2: makeInitialSensorState(),
+      S3: makeInitialSensorState(),
+      S4: makeInitialSensorState(),
+      S5: makeInitialSensorState()
+    };
+
+    function makeInitialSensorState() {
+      return {
+        delta: 0,
+        hallValue: null,
+        movementDisturbed: false,
+        hallDisturbed: false,
+        severity: "Normal",
+        statusClass: "ok",
+        eventType: "None",
+        lastSeen: "--:--:--",
+        lastSeenTs: 0,
+        lastDisturbanceTs: 0,
+        sourceLabel: "",
+        lastMessage: null
+      };
+    }
+
+    function initAudio() {
+      if (audioReady) return;
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      audioReady = true;
+    }
+
+    function playAlarmCue() {
+      if (!audioReady || !audioCtx) return;
+
+      const now = audioCtx.currentTime;
+      const gain = audioCtx.createGain();
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.connect(audioCtx.destination);
+
+      const osc1 = audioCtx.createOscillator();
+      const osc2 = audioCtx.createOscillator();
+
+      osc1.type = "square";
+      osc2.type = "square";
+
+      osc1.frequency.setValueAtTime(880, now);
+      osc2.frequency.setValueAtTime(660, now + 0.1);
+
+      osc1.connect(gain);
+      osc2.connect(gain);
+
+      osc1.start(now);
+      osc2.start(now + 0.12);
+
+      gain.gain.exponentialRampToValueAtTime(0.16, now + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
+
+      osc1.stop(now + 0.7);
+      osc2.stop(now + 0.7);
+    }
+
+    function requestNotificationPermission() {
+      if (!("Notification" in window)) return;
+      if (Notification.permission === "default") {
+        Notification.requestPermission();
+      }
+    }
+
+    function sendBrowserNotification(title, body) {
+      if (!("Notification" in window)) return;
+      if (Notification.permission !== "granted") return;
+      new Notification(title, { body });
+    }
+
+    function markConnected(isConnected) {
+      statusDot.classList.remove("connected", "disconnected");
+      statusDot.classList.add(isConnected ? "connected" : "disconnected");
+    }
+
+    function ensureEmptyLogMessage() {
+      if (!log.querySelector(".entry")) {
+        log.innerHTML = `<div class="empty-log">No alerts received yet.</div>`;
+      }
+    }
+
+    function addLogEntry(message, zone = "", entryType = "info") {
+      const empty = log.querySelector(".empty-log");
+      if (empty) empty.remove();
+
+      const entry = document.createElement("div");
+      const classMap = {
+        alert: "alert-entry",
+        warning: "warning-entry",
+        info: "info-entry",
+        suppressed: "suppressed-entry"
+      };
+
+      entry.className = `entry ${classMap[entryType] || ""}`.trim();
+      if (zone) entry.dataset.zone = zone;
+
+      entry.innerHTML = `
+        <span class="entry-meta">
+          ${new Date().toLocaleTimeString()}${zone ? ` • ${zone}` : ""}
+        </span>
+        ${message}
+      `;
+
+      log.prepend(entry);
+    }
+
+    function pickSensorId(data) {
+      if (typeof data.sensorId === "string" && sensorIds.includes(data.sensorId)) return data.sensorId;
+      return sensorIds[sensorIndex++ % sensorIds.length];
+    }
+
+    function formatHallValue(value) {
+      if (value === null || value === undefined || value === "") return "--";
+      if (typeof value === "boolean") return value ? "1" : "0";
+      if (typeof value === "number") return String(value);
+      return String(value);
+    }
+
+    function inferMovementDisturbed(data) {
+      if (typeof data.movement === "boolean") return data.movement;
+      if (typeof data.movementDisturbed === "boolean") return data.movementDisturbed;
+      if (typeof data.motion === "boolean") return data.motion;
+      if (typeof data.accelerometerAlert === "boolean") return data.accelerometerAlert;
+      if (typeof data.disturbed === "boolean") return data.disturbed;
+      return false;
+    }
+
+    function inferHallDisturbed(data) {
+      if (typeof data.hallDisturbed === "boolean") return data.hallDisturbed;
+      if (typeof data.hallAlert === "boolean") return data.hallAlert;
+      if (typeof data.hallTriggered === "boolean") return data.hallTriggered;
+      if (typeof data.magneticLoss === "boolean") return data.magneticLoss;
+      if (typeof data.electricalDisturbance === "boolean") return data.electricalDisturbance;
+      if (typeof data.hall === "boolean") return data.hall;
+      return false;
+    }
+
+    function inferHallValue(data) {
+      if (data.hallValue !== undefined) return data.hallValue;
+      if (data.hallRaw !== undefined) return data.hallRaw;
+      if (data.hallAnalog !== undefined) return data.hallAnalog;
+      if (data.hallState !== undefined) return data.hallState;
+      if (data.magneticField !== undefined) return data.magneticField;
+      return null;
+    }
+
+    function inferSeverity(movementDisturbed, hallDisturbed, offline) {
+      if (offline) return { label: "Offline", className: "offline", eventType: "NODE_OFFLINE" };
+      if (movementDisturbed && hallDisturbed) return { label: "Active Incident", className: "alert", eventType: "COMBINED_DISTURBANCE" };
+      if (movementDisturbed) return { label: "Elevated", className: "warning", eventType: "MOVEMENT_DISTURBANCE" };
+      if (hallDisturbed) return { label: "Elevated", className: "warning", eventType: "ELECTRICAL_DISTURBANCE" };
+      return { label: "Normal", className: "ok", eventType: "NORMAL" };
+    }
+
+    function describeEvent(eventType) {
+      switch (eventType) {
+        case "COMBINED_DISTURBANCE": return "Combined disturbance";
+        case "MOVEMENT_DISTURBANCE": return "Movement disturbance";
+        case "ELECTRICAL_DISTURBANCE": return "Electrical disturbance";
+        case "NODE_OFFLINE": return "Node offline";
+        case "NORMAL": return "Normal";
+        default: return eventType || "--";
+      }
+    }
+
+    function renderNodeTooltip(id) {
+      const el = document.getElementById(`tooltip-${id}`);
+      const state = sensorState[id];
+      el.innerHTML = `
+        <strong>${id} — ${zoneNames[id]}</strong>
+        ${state.severity}<br />
+        Move: ${state.movementDisturbed ? "Disturbed" : "Normal"} | Hall: ${state.hallDisturbed ? "Disturbed" : "Normal"}
+      `;
+    }
+
+    function renderZoneCard(id) {
+      const state = sensorState[id];
+      const badge = document.getElementById(`badge-${id}`);
+      const nodeEl = document.getElementById(`node-${id}`);
+      const movementEl = document.getElementById(`movementState-${id}`);
+      const hallEl = document.getElementById(`hallState-${id}`);
+      const deltaEl = document.getElementById(`delta-${id}`);
+      const hallValueEl = document.getElementById(`hallValue-${id}`);
+      const lastSeenEl = document.getElementById(`lastSeen-${id}`);
+      const displayStateEl = document.getElementById(`displayState-${id}`);
+
+      const isEnabled = zoneAlertEnabled[id];
+      const isOffline = state.statusClass === "offline";
+
+      deltaEl.textContent = Number(state.delta || 0).toFixed(2);
+      hallValueEl.textContent = formatHallValue(state.hallValue);
+      lastSeenEl.textContent = state.lastSeen;
+      displayStateEl.textContent = isEnabled ? "Enabled" : "Suppressed";
+
+      badge.className = "zone-badge";
+      nodeEl.classList.remove("warning", "alert", "suppressed", "offline");
+
+      movementEl.className = "sensor-state-value";
+      hallEl.className = "sensor-state-value";
+
+      if (!isEnabled && !isOffline) {
+        badge.textContent = "Suppressed";
+        badge.classList.add("suppressed");
+        nodeEl.classList.add("suppressed");
+      } else {
+        badge.textContent = state.severity;
+        badge.classList.add(state.statusClass || "ok");
+        nodeEl.classList.add(state.statusClass || "ok");
+      }
+
+      if (isOffline) {
+        badge.textContent = "Offline";
+        badge.className = "zone-badge offline";
+        nodeEl.classList.add("offline");
+      }
+
+      movementEl.textContent = isOffline ? "Unavailable" : (state.movementDisturbed ? "Disturbed" : "Normal");
+      movementEl.classList.add(isOffline ? "offline" : (state.movementDisturbed ? "warning" : "ok"));
+
+      hallEl.textContent = isOffline ? "Unavailable" : (state.hallDisturbed ? "Disturbed" : "Normal");
+      hallEl.classList.add(isOffline ? "offline" : (state.hallDisturbed ? "warning" : "ok"));
+
+      renderNodeTooltip(id);
+    }
+
+    function computeSystemWarnings() {
+      const now = Date.now();
+      const activeZones = [];
+      const elevatedZones = [];
+      const hallLossZones = [];
+      const offlineZones = [];
+      let electricalWarnings = 0;
+      let suppressed = 0;
+
+      sensorIds.forEach((id) => {
+        const s = sensorState[id];
+        const isOffline = (now - s.lastSeenTs > OFFLINE_TIMEOUT_MS) || s.statusClass === "offline";
+
+        if (!zoneAlertEnabled[id]) suppressed++;
+        if (isOffline) offlineZones.push(id);
+        if (s.movementDisturbed && s.hallDisturbed && !isOffline) activeZones.push(id);
+        else if ((s.movementDisturbed || s.hallDisturbed) && !isOffline) elevatedZones.push(id);
+
+        if (s.hallDisturbed && !isOffline) {
+          hallLossZones.push(id);
+          electricalWarnings++;
+        }
+      });
+
+      const warnings = [];
+
+      const allHallRefsLost = HALL_REFERENCE_NODES.length > 0 &&
+        HALL_REFERENCE_NODES.every((id) => hallLossZones.includes(id));
+
+      if (allHallRefsLost) {
+        warnings.push({
+          type: "danger",
+          zone: "SYSTEM",
+          title: "Possible Shared Power Loss",
+          body: `Hall signal loss detected across reference nodes ${HALL_REFERENCE_NODES.join(", ")}. Shared electrical interruption may have occurred.`
+        });
+      }
+
+      const recentDisturbances = sensorIds.filter((id) => {
+        const s = sensorState[id];
+        return (now - s.lastDisturbanceTs) <= MULTI_ZONE_WINDOW_MS && (s.movementDisturbed || s.hallDisturbed);
+      });
+
+      if (recentDisturbances.length >= 2) {
+        warnings.push({
+          type: "warning",
+          zone: "SYSTEM",
+          title: "Multi-Zone Disturbance",
+          body: `Concurrent disturbances detected across ${recentDisturbances.join(", ")} within the current event window.`
+        });
+      }
+
+      if (offlineZones.length > 0) {
+        warnings.push({
+          type: "info",
+          zone: "SYSTEM",
+          title: "Monitoring Gap Detected",
+          body: `Telemetry stale or unavailable for ${offlineZones.join(", ")}.`
+        });
+      }
+
+      return {
+        warnings,
+        counts: {
+          active: activeZones.length,
+          elevated: elevatedZones.length,
+          offline: offlineZones.length,
+          electricalWarnings,
+          suppressed
+        }
+      };
+    }
+
+    function renderSystemWarnings() {
+      const { warnings, counts } = computeSystemWarnings();
+
+      activeIncidentsCount.textContent = counts.active;
+      elevatedZonesCount.textContent = counts.elevated;
+      offlineNodesCount.textContent = counts.offline;
+      electricalWarningsCount.textContent = counts.electricalWarnings;
+      suppressedZonesCount.textContent = counts.suppressed;
+      suppressedZonesHeader.textContent = counts.suppressed;
+
+      systemWarningsEl.innerHTML = "";
+      if (!warnings.length) {
+        systemWarningsEl.innerHTML = `<div class="warning-empty">No active system warnings.</div>`;
+        return;
+      }
+
+      warnings.forEach((warning) => {
+        const div = document.createElement("div");
+        div.className = `warning-item ${warning.type}`;
+        div.innerHTML = `
+          <div class="warning-title">${warning.title}</div>
+          <div class="warning-body">${warning.body}</div>
+        `;
+        systemWarningsEl.appendChild(div);
+      });
+    }
+
+    function renderAllZones() {
+      sensorIds.forEach(renderZoneCard);
+      renderSystemWarnings();
+    }
+
+    function showAlertState(kind, zoneLabel, deltaText, severity, details) {
+      alertBox.className = kind;
+      alertBox.style.display = "block";
+      alertBox.innerHTML = `
+        <span class="alert-title">${severity}</span>
+        ${details}<br />
+        <strong>Zone:</strong> ${zoneLabel}<br />
+        <strong>Delta:</strong> ${deltaText}
+      `;
+    }
+
+    function updateNodeOfflineState() {
+      const now = Date.now();
+      let changed = false;
+
+      sensorIds.forEach((id) => {
+        const s = sensorState[id];
+        if (!s.lastSeenTs) return;
+
+        const shouldBeOffline = (now - s.lastSeenTs) > OFFLINE_TIMEOUT_MS;
+        if (shouldBeOffline && s.statusClass !== "offline") {
+          s.severity = "Offline";
+          s.statusClass = "offline";
+          s.eventType = "NODE_OFFLINE";
+          changed = true;
+        }
+      });
+
+      if (changed) renderAllZones();
+      else renderSystemWarnings();
+    }
+
+    function applyMessageToSensor(sensorId, data) {
+      const state = sensorState[sensorId];
+      const now = Date.now();
+
+      const movementDisturbed = inferMovementDisturbed(data);
+      const hallDisturbed = inferHallDisturbed(data);
+      const hallValue = inferHallValue(data);
+      const rawDelta = data.delta ?? data.value ?? 0;
+      const sourceLabel = data.source || zoneNames[sensorId] || sensorId;
+
+      state.delta = Number(rawDelta) || 0;
+      state.hallValue = hallValue;
+      state.movementDisturbed = movementDisturbed;
+      state.hallDisturbed = hallDisturbed;
+      state.sourceLabel = sourceLabel;
+      state.lastSeen = new Date().toLocaleTimeString();
+      state.lastSeenTs = now;
+      state.lastMessage = data;
+
+      if (movementDisturbed || hallDisturbed) {
+        state.lastDisturbanceTs = now;
+      }
+
+      const severity = inferSeverity(movementDisturbed, hallDisturbed, false);
+      state.severity = severity.label;
+      state.statusClass = severity.className;
+      state.eventType = severity.eventType;
+
+      return {
+        movementDisturbed,
+        hallDisturbed,
+        rawDelta,
+        deltaText: Number(rawDelta).toFixed(2),
+        sourceLabel,
+        severity
+      };
+    }
+
+    function eventLogMessage(zoneLabel, eventType, severityLabel, deltaText, hallValue) {
+      const hallText = hallValue === null || hallValue === undefined ? "--" : hallValue;
+      return `${describeEvent(eventType)} | ${zoneLabel} | Severity ${severityLabel} | Delta ${deltaText} | Hall ${hallText}`;
+    }
+
+    sensorIds.forEach((zone) => {
+      const toggle = document.getElementById(`toggle-${zone}`);
+      toggle.addEventListener("change", () => {
+        zoneAlertEnabled[zone] = toggle.checked;
+        renderAllZones();
+      });
+    });
+
+    document.querySelectorAll("[data-clear-zone]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const zone = btn.dataset.clearZone;
+        log.querySelectorAll(`.entry[data-zone="${zone}"]`).forEach((entry) => entry.remove());
+        ensureEmptyLogMessage();
+      });
+    });
+
+    document.getElementById("clearAllLogsBtn").addEventListener("click", () => {
+      log.innerHTML = "";
+      ensureEmptyLogMessage();
+    });
+
+    document.getElementById("clearZoneLogsBtn").addEventListener("click", () => {
+      const zone = document.getElementById("clearZoneSelect").value;
+      if (!zone) return;
+      log.querySelectorAll(`.entry[data-zone="${zone}"]`).forEach((entry) => entry.remove());
+      ensureEmptyLogMessage();
+    });
+
+    ws.onopen = () => {
+      status.textContent = "Connected";
+      markConnected(true);
+      addLogEntry("WebSocket session established.", "SYSTEM", "info");
+    };
+
+    ws.onclose = () => {
+      status.textContent = "Disconnected";
+      markConnected(false);
+      addLogEntry("WebSocket session lost.", "SYSTEM", "alert");
+    };
+
+    ws.onmessage = (event) => {
+      let data;
+      try {
+        data = JSON.parse(event.data);
+      } catch (e) {
+        return;
+      }
+
+      if (data.type === "ping") return;
+
+      if (data.connectedNodes !== undefined) {
+        nodeCountEl.textContent = `${data.connectedNodes} / 3 Connected`;
+      }
+
+      const sensorId = pickSensorId(data);
+      const displayEnabled = zoneAlertEnabled[sensorId] ?? true;
+
+      const applied = applyMessageToSensor(sensorId, data);
+      const {
+        movementDisturbed,
+        hallDisturbed,
+        deltaText,
+        sourceLabel,
+        severity
+      } = applied;
+
+      const eventType = severity.eventType;
+      const severityLabel = severity.label;
+      const hallValue = sensorState[sensorId].hallValue;
+
+      lastDeltaEl.textContent = deltaText;
+      lastUpdateEl.textContent = new Date().toLocaleTimeString();
+      activeSensorEl.textContent = sourceLabel;
+      lastEventTypeEl.textContent = describeEvent(eventType);
+      lastSeverityEl.textContent = severityLabel;
+
+      if (movementDisturbed || hallDisturbed) {
+        lastIncidentZone.textContent = sourceLabel;
+      }
+
+      renderAllZones();
+
+      const logMsg = eventLogMessage(sourceLabel, eventType, severityLabel, deltaText, formatHallValue(hallValue));
+
+      if (!displayEnabled) {
+        showAlertState(
+          "suppressed",
+          sourceLabel,
+          deltaText,
+          "Display Suppressed",
+          "An event was received, but alert display for this zone is currently disabled on the dashboard."
+        );
+        addLogEntry(`${logMsg} | Display suppressed`, sensorId, "suppressed");
+        return;
+      }
+
+      if (eventType === "COMBINED_DISTURBANCE") {
+        totalAlerts++;
+        totalAlertsEl.textContent = totalAlerts;
+        showAlertState(
+          "combined",
+          sourceLabel,
+          deltaText,
+          "Active Incident",
+          "Both movement and electrical / hall disturbances were detected on this node."
+        );
+        playAlarmCue();
+        sendBrowserNotification(
+          "Corridor Active Incident",
+          `${sourceLabel} | Movement + electrical disturbance | Delta ${deltaText}`
+        );
+        addLogEntry(logMsg, sensorId, "alert");
+      } else if (eventType === "MOVEMENT_DISTURBANCE") {
+        showAlertState(
+          "movement",
+          sourceLabel,
+          deltaText,
+          "Elevated",
+          "Movement disturbance detected on this node."
+        );
+        sendBrowserNotification(
+          "Corridor Warning",
+          `${sourceLabel} | Movement disturbance | Delta ${deltaText}`
+        );
+        addLogEntry(logMsg, sensorId, "warning");
+      } else if (eventType === "ELECTRICAL_DISTURBANCE") {
+        showAlertState(
+          "electrical",
+          sourceLabel,
+          deltaText,
+          "Elevated",
+          "Electrical / hall disturbance detected on this node."
+        );
+        sendBrowserNotification(
+          "Corridor Electrical Warning",
+          `${sourceLabel} | Electrical disturbance | Hall anomaly detected`
+        );
+        addLogEntry(logMsg, sensorId, "info");
+      } else {
+        showAlertState(
+          "still",
+          sourceLabel,
+          deltaText,
+          "System State",
+          "Monitoring normal."
+        );
+        addLogEntry(logMsg, sensorId, "info");
+      }
+    };
+
+    ["click", "touchstart", "keydown"].forEach((ev) =>
+      window.addEventListener(ev, () => {
+        initAudio();
+        requestNotificationPermission();
+      }, { once: true })
+    );
+
+    setInterval(updateNodeOfflineState, 3000);
+
+    markConnected(false);
+    renderAllZones();
+  </script>
+</body>
+</html>
