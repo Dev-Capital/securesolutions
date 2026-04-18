@@ -38,8 +38,10 @@ web-dashboard/build/
 # FIRMWARE (ESP32 / Arduino)
 ##################################################
 # Local secrets (CRITICAL)
-firmware-node/secrets.h
-firmware-controller/secrets.h
+firmware/controller/secrets.h
+firmware/node/node-1/secrets.h
+firmware/node/node-2/secrets.h
+firmware/node/node-3/secrets.h
 
 # Arduino temporary files
 *.ino.cpp
@@ -210,3 +212,6 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+
+
