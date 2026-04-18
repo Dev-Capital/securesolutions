@@ -38,10 +38,9 @@ web-dashboard/build/
 # FIRMWARE (ESP32 / Arduino)
 ##################################################
 # Local secrets (CRITICAL)
+**/secrets.h
 firmware/controller/secrets.h
-firmware/node/node-1/secrets.h
-firmware/node/node-2/secrets.h
-firmware/node/node-3/secrets.h
+firmware/node/secrets.h
 
 # Arduino temporary files
 *.ino.cpp
