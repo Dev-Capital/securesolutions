@@ -7,7 +7,7 @@
 // =========================
 // 1. CONFIGURATION
 // =========================
-const char *NODE_NAME = "NODE-1";
+const char *NODE_NAME = "NODE-2";
 uint8_t controllerMac[] = CONTROLLER_MAC ;
 int gatewayChannel = 1; 
 
